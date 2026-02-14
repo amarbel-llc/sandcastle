@@ -63,7 +63,7 @@
             cp package.json $out/lib/sandcastle/
 
             makeWrapper ${pkgs.nodejs_22}/bin/node $out/bin/sandcastle \
-              --add-flags "$out/lib/sandcastle/cli.js --" \
+              --add-flags "$out/lib/sandcastle/cli.js" \
               --prefix PATH : ${
                 pkgs.lib.makeBinPath [
                   pkgs.bubblewrap
