@@ -61,9 +61,10 @@
             cp -r dist/* $out/lib/sandcastle/
             cp -r node_modules $out/lib/sandcastle/
             cp package.json $out/lib/sandcastle/
+            cp ${./sandcastle-cli.mjs} $out/lib/sandcastle/sandcastle-cli.mjs
 
             makeWrapper ${pkgs.nodejs_22}/bin/node $out/bin/sandcastle \
-              --add-flags "$out/lib/sandcastle/cli.js" \
+              --add-flags "$out/lib/sandcastle/sandcastle-cli.mjs" \
               --prefix PATH : ${
                 pkgs.lib.makeBinPath [
                   pkgs.bubblewrap
