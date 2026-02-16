@@ -120,7 +120,7 @@ async function main() {
             const quoted = commandArgs.map(shellQuote).join(' ')
             command = `${options.shell} -c ${shellQuote(quoted)}`
           } else {
-            command = commandArgs.join(' ')
+            command = commandArgs.map(shellQuote).join(' ')
           }
           logForDebugging(`Command: ${command}`)
         } else {
