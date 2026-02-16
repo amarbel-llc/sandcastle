@@ -15,6 +15,11 @@
       url = "github:amarbel-llc/eng?dir=devenvs/nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    batman = {
+      url = "github:amarbel-llc/batman";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -25,6 +30,7 @@
       utils,
       devenv-node,
       devenv-nix,
+      batman,
       ...
     }:
     utils.lib.eachDefaultSystem (
@@ -88,8 +94,12 @@
         };
 
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [
+          packages = (with pkgs; [
+            bats
             just
+          ]) ++ [
+            batman.packages.${system}.bats-libs
+            sandcastle
           ];
 
           inputsFrom = [
