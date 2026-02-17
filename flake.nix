@@ -72,11 +72,13 @@
             makeWrapper ${pkgs.nodejs_22}/bin/node $out/bin/sandcastle \
               --add-flags "$out/lib/sandcastle/sandcastle-cli.mjs" \
               --prefix PATH : ${
-                pkgs.lib.makeBinPath [
-                  pkgs.bubblewrap
-                  pkgs.socat
-                  pkgs.ripgrep
-                ]
+                pkgs.lib.makeBinPath (
+                  [
+                    pkgs.socat
+                    pkgs.ripgrep
+                  ]
+                  ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.bubblewrap ]
+                )
               }
 
             runHook postInstall
