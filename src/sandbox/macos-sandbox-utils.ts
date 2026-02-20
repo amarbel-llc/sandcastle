@@ -35,6 +35,7 @@ export interface MacOSSandboxParams {
   allowGitConfig?: boolean
   enableWeakerNetworkIsolation?: boolean
   binShell?: string
+  tmpdir?: string
 }
 
 /**
@@ -653,6 +654,7 @@ export function wrapCommandWithSandboxMacOS(
     allowGitConfig = false,
     enableWeakerNetworkIsolation = false,
     binShell,
+    tmpdir,
   } = params
 
   // Determine if we have restrictions to apply
@@ -688,7 +690,7 @@ export function wrapCommandWithSandboxMacOS(
   })
 
   // Generate proxy environment variables using shared utility
-  const proxyEnvArgs = generateProxyEnvVars(httpProxyPort, socksProxyPort)
+  const proxyEnvArgs = generateProxyEnvVars(httpProxyPort, socksProxyPort, tmpdir)
 
   // Use the user's shell (zsh, bash, etc.) to ensure aliases/snapshots work
   // Resolve the full path to the shell binary

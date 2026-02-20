@@ -51,6 +51,7 @@ let managerContext: HostNetworkManagerContext | undefined
 let initializationPromise: Promise<HostNetworkManagerContext> | undefined
 let cleanupRegistered = false
 let logMonitorShutdown: (() => void) | undefined
+let sandboxTmpdir: string | undefined
 const sandboxViolationStore = new SandboxViolationStore()
 
 // ============================================================================
@@ -383,7 +384,7 @@ function getFsReadConfig(): FsReadRestrictionConfig {
 
 function getFsWriteConfig(): FsWriteRestrictionConfig {
   if (!config) {
-    return { allowOnly: getDefaultWritePaths(), denyWithinAllow: [] }
+    return { allowOnly: getDefaultWritePaths(sandboxTmpdir), denyWithinAllow: [] }
   }
 
   // Filter out glob patterns on Linux/WSL for allowWrite (bubblewrap doesn't support globs)
@@ -409,7 +410,7 @@ function getFsWriteConfig(): FsWriteRestrictionConfig {
     })
 
   // Build allowOnly list: default paths + configured allow paths
-  const allowOnly = [...getDefaultWritePaths(), ...allowPaths]
+  const allowOnly = [...getDefaultWritePaths(sandboxTmpdir), ...allowPaths]
 
   return {
     allowOnly,
@@ -522,7 +523,7 @@ async function wrapWithSandbox(
   const userAllowWrite =
     customConfig?.filesystem?.allowWrite ?? config?.filesystem.allowWrite ?? []
   const writeConfig = {
-    allowOnly: [...getDefaultWritePaths(), ...userAllowWrite],
+    allowOnly: [...getDefaultWritePaths(sandboxTmpdir), ...userAllowWrite],
     denyWithinAllow:
       customConfig?.filesystem?.denyWrite ?? config?.filesystem.denyWrite ?? [],
   }
@@ -587,6 +588,7 @@ async function wrapWithSandbox(
         allowGitConfig: getAllowGitConfig(),
         enableWeakerNetworkIsolation: getEnableWeakerNetworkIsolation(),
         binShell,
+        tmpdir: sandboxTmpdir,
       })
 
     case 'linux':
@@ -616,6 +618,7 @@ async function wrapWithSandbox(
         allowGitConfig: getAllowGitConfig(),
         seccompConfig: getSeccompConfig(),
         abortSignal,
+        tmpdir: sandboxTmpdir,
       })
 
     default:
@@ -630,6 +633,10 @@ async function wrapWithSandbox(
  * Get the current sandbox configuration
  * @returns The current configuration, or undefined if not initialized
  */
+export function setTmpdir(dir: string): void {
+  sandboxTmpdir = dir
+}
+
 function getConfig(): SandboxRuntimeConfig | undefined {
   return config
 }
@@ -928,6 +935,7 @@ export interface ISandboxManager {
   getLinuxGlobPatternWarnings(): string[]
   getConfig(): SandboxRuntimeConfig | undefined
   updateConfig(newConfig: SandboxRuntimeConfig): void
+  setTmpdir(dir: string): void
   cleanupAfterCommand(): void
   reset(): Promise<void>
 }
@@ -965,4 +973,5 @@ export const SandboxManager: ISandboxManager = {
   getLinuxGlobPatternWarnings,
   getConfig,
   updateConfig,
+  setTmpdir,
 } as const

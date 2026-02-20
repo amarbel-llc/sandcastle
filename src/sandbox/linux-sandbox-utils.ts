@@ -57,6 +57,8 @@ export interface LinuxSandboxParams {
   seccompConfig?: { bpfPath?: string; applyPath?: string }
   /** Abort signal to cancel the ripgrep scan */
   abortSignal?: AbortSignal
+  /** Custom tmpdir for sandboxed processes */
+  tmpdir?: string
 }
 
 /** Default max depth for searching dangerous files */
@@ -920,6 +922,7 @@ export async function wrapCommandWithSandboxLinux(
     allowGitConfig = false,
     seccompConfig,
     abortSignal,
+    tmpdir,
   } = params
 
   // Determine if we have restrictions to apply
@@ -1014,6 +1017,7 @@ export async function wrapCommandWithSandboxLinux(
         const proxyEnv = generateProxyEnvVars(
           3128, // Internal HTTP listener port
           1080, // Internal SOCKS listener port
+          tmpdir,
         )
         bwrapArgs.push(
           ...proxyEnv.flatMap((env: string) => {
