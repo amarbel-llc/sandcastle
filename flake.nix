@@ -42,14 +42,9 @@
           pname = "sandcastle";
           version = "0.0.37";
 
-          src = pkgs.fetchFromGitHub {
-            owner = "anthropic-experimental";
-            repo = "sandbox-runtime";
-            rev = "96800ee98b66ac4029c22b04cb19950dc85afb11";
-            hash = "sha256-lxsuC9l3T/DiP5ZNMgCzeJHBxxXLhfi/G4cTmUI2WWU=";
-          };
+          src = pkgs.lib.cleanSource ./.;
 
-          npmDepsHash = "sha256-eShe2ag5ASR2nSDlk/aYaANuAQS7d+fkZ+ydyuSt06w=";
+          npmDepsHash = "sha256-LMqLtMWMmzEiHW+VJAPnivqHtoJV2wWWP2S8Z/smfWc=";
 
           nativeBuildInputs = [ pkgs.makeWrapper ];
 
@@ -83,8 +78,6 @@
 
             runHook postInstall
           '';
-
-          dontNpmBuild = true;
         };
       in
       {
