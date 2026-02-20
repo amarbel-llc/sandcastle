@@ -274,22 +274,30 @@ export function normalizePathForSandbox(pathPattern: string): string {
  * allow access to files from other processes. In highly security-sensitive
  * environments, you should configure more restrictive write paths.
  */
-export function getDefaultWritePaths(): string[] {
+export function getDefaultWritePaths(tmpdir?: string): string[] {
   const homeDir = homedir()
-  const recommendedPaths = [
+  const writePaths = [
     '/dev/stdout',
     '/dev/stderr',
     '/dev/null',
     '/dev/tty',
     '/dev/dtracehelper',
     '/dev/autofs_nowait',
-    '/tmp/claude',
-    '/private/tmp/claude',
     path.join(homeDir, '.npm/_logs'),
     path.join(homeDir, '.claude/debug'),
   ]
 
-  return recommendedPaths
+  if (tmpdir) {
+    writePaths.push(tmpdir)
+    // On macOS, /tmp is a symlink to /private/tmp
+    if (tmpdir.startsWith('/tmp/')) {
+      writePaths.push('/private' + tmpdir)
+    } else if (tmpdir.startsWith('/private/tmp/')) {
+      writePaths.push(tmpdir.replace('/private', ''))
+    }
+  }
+
+  return writePaths
 }
 
 /**
@@ -298,10 +306,13 @@ export function getDefaultWritePaths(): string[] {
 export function generateProxyEnvVars(
   httpProxyPort?: number,
   socksProxyPort?: number,
+  tmpdir?: string,
 ): string[] {
-  // Respect CLAUDE_TMPDIR if set, otherwise default to /tmp/claude
-  const tmpdir = process.env.CLAUDE_TMPDIR || '/tmp/claude'
-  const envVars: string[] = [`SANDBOX_RUNTIME=1`, `TMPDIR=${tmpdir}`]
+  const envVars: string[] = [`SANDBOX_RUNTIME=1`]
+
+  if (tmpdir) {
+    envVars.push(`TMPDIR=${tmpdir}`)
+  }
 
   // If no proxy ports provided, return minimal env vars
   if (!httpProxyPort && !socksProxyPort) {
