@@ -16,10 +16,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    batman = {
-      url = "github:amarbel-llc/batman";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
@@ -30,7 +26,6 @@
       utils,
       devenv-node,
       devenv-nix,
-      batman,
       ...
     }:
     utils.lib.eachDefaultSystem (
@@ -89,11 +84,9 @@
         };
 
         devShells.default = pkgs.mkShell {
-          packages = (with pkgs; [
-            bats
-            just
-          ]) ++ [
-            batman.packages.${system}.bats-libs
+          packages = [
+            (pkgs.bats.withLibraries (p: [ p.bats-support p.bats-assert ]))
+            pkgs.just
             sandcastle
           ];
 
