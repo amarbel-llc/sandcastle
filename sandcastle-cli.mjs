@@ -46,6 +46,7 @@ async function main() {
       'path to config file (default: ~/.srt-settings.json)',
     )
     .option('--shell <shell>', 'shell to execute the command with')
+    .option('--tmpdir <path>', 'override the temporary directory used inside the sandbox')
     .option(
       '--control-fd <fd>',
       'read config updates from file descriptor (JSON lines protocol)',
@@ -68,11 +69,28 @@ async function main() {
           runtimeConfig = getDefaultConfig()
         }
 
-        // Ensure the sandbox TMPDIR exists before initializing.
-        // sandbox-runtime sets TMPDIR to this path for child processes but
-        // does not create it, causing tools like bats to fail at startup.
-        const sandboxTmpdir = process.env.SANDBOX_TMPDIR || '/tmp/sandcastle'
-        fs.mkdirSync(sandboxTmpdir, { recursive: true })
+        let sandboxTmpdir
+        let cleanupTmpdir = false
+
+        if (options.tmpdir) {
+          sandboxTmpdir = options.tmpdir
+          fs.mkdirSync(sandboxTmpdir, { recursive: true })
+        } else {
+          sandboxTmpdir = fs.mkdtempSync(path.join(os.tmpdir(), 'sandcastle-'))
+          cleanupTmpdir = true
+        }
+
+        SandboxManager.setTmpdir(sandboxTmpdir)
+
+        process.on('exit', () => {
+          if (cleanupTmpdir && sandboxTmpdir) {
+            try {
+              fs.rmSync(sandboxTmpdir, { recursive: true, force: true })
+            } catch {
+              // Best-effort cleanup
+            }
+          }
+        })
 
         logForDebugging('Initializing sandbox...')
         await SandboxManager.initialize(runtimeConfig)
