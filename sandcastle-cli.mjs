@@ -68,6 +68,12 @@ async function main() {
           runtimeConfig = getDefaultConfig()
         }
 
+        // Ensure the sandbox TMPDIR exists before initializing.
+        // sandbox-runtime sets TMPDIR to this path for child processes but
+        // does not create it, causing tools like bats to fail at startup.
+        const sandboxTmpdir = process.env.SANDBOX_TMPDIR || '/tmp/sandcastle'
+        fs.mkdirSync(sandboxTmpdir, { recursive: true })
+
         logForDebugging('Initializing sandbox...')
         await SandboxManager.initialize(runtimeConfig)
 
